@@ -1,0 +1,2249 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 139,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# usual imports \n",
+    "import pandas as pd\n",
+    "import numpy as np \n",
+    "import seaborn as sns\n",
+    "import matplotlib.pyplot as plt\n",
+    "\n",
+    "# scikit-learn and category encoders\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from category_encoders import OneHotEncoder\n",
+    "from sklearn.linear_model import LogisticRegression\n",
+    "from sklearn.preprocessing import StandardScaler\n",
+    "from sklearn.model_selection import GridSearchCV"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "EDA OF LOAN DATA"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "UPLOADING THE DATA"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/shivajirao/opt/anaconda3/lib/python3.7/site-packages/IPython/core/interactiveshell.py:3063: DtypeWarning: Columns (47) have mixed types.Specify dtype option on import or set low_memory=False.\n",
+      "  interactivity=interactivity, compiler=compiler, result=result)\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan = pd.read_csv(\"./archive(1)/loan.csv\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 53,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 39717 entries, 0 to 39716\n",
+      "Columns: 111 entries, id to total_il_high_credit_limit\n",
+      "dtypes: float64(74), int64(13), object(24)\n",
+      "memory usage: 33.6+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 55,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 39717 entries, 0 to 39716\n",
+      "Columns: 111 entries, id to total_il_high_credit_limit\n",
+      "dtypes: float64(74), int64(13), object(24)\n",
+      "memory usage: 33.6+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0         Fully Paid\n",
+       "1        Charged Off\n",
+       "2         Fully Paid\n",
+       "3         Fully Paid\n",
+       "4            Current\n",
+       "            ...     \n",
+       "39712     Fully Paid\n",
+       "39713     Fully Paid\n",
+       "39714     Fully Paid\n",
+       "39715     Fully Paid\n",
+       "39716     Fully Paid\n",
+       "Name: loan_status, Length: 39717, dtype: object"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "loan[\"loan_status\"]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Fully Paid     32950\n",
+       "Charged Off     5627\n",
+       "Current         1140\n",
+       "Name: loan_status, dtype: int64"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "loan[\"loan_status\"].value_counts()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "DROP ALL COLUMNS WHICH HAVE NO DATA"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "loan_new = loan.dropna(axis = 1, how = 'all')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {
+    "collapsed": true,
+    "jupyter": {
+     "outputs_hidden": true
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<bound method DataFrame.info of             id  member_id  loan_amnt  funded_amnt  funded_amnt_inv  \\\n",
+      "0      1077501    1296599       5000         5000           4975.0   \n",
+      "1      1077430    1314167       2500         2500           2500.0   \n",
+      "2      1077175    1313524       2400         2400           2400.0   \n",
+      "3      1076863    1277178      10000        10000          10000.0   \n",
+      "4      1075358    1311748       3000         3000           3000.0   \n",
+      "...        ...        ...        ...          ...              ...   \n",
+      "39712    92187      92174       2500         2500           1075.0   \n",
+      "39713    90665      90607       8500         8500            875.0   \n",
+      "39714    90395      90390       5000         5000           1325.0   \n",
+      "39715    90376      89243       5000         5000            650.0   \n",
+      "39716    87023      86999       7500         7500            800.0   \n",
+      "\n",
+      "             term int_rate  installment grade sub_grade  ... next_pymnt_d  \\\n",
+      "0       36 months   10.65%       162.87     B        B2  ...          NaN   \n",
+      "1       60 months   15.27%        59.83     C        C4  ...          NaN   \n",
+      "2       36 months   15.96%        84.33     C        C5  ...          NaN   \n",
+      "3       36 months   13.49%       339.31     C        C1  ...          NaN   \n",
+      "4       60 months   12.69%        67.79     B        B5  ...       Jun-16   \n",
+      "...           ...      ...          ...   ...       ...  ...          ...   \n",
+      "39712   36 months    8.07%        78.42     A        A4  ...          NaN   \n",
+      "39713   36 months   10.28%       275.38     C        C1  ...          NaN   \n",
+      "39714   36 months    8.07%       156.84     A        A4  ...          NaN   \n",
+      "39715   36 months    7.43%       155.38     A        A2  ...          NaN   \n",
+      "39716   36 months   13.75%       255.43     E        E2  ...          NaN   \n",
+      "\n",
+      "      last_credit_pull_d collections_12_mths_ex_med  policy_code  \\\n",
+      "0                 May-16                        0.0            1   \n",
+      "1                 Sep-13                        0.0            1   \n",
+      "2                 May-16                        0.0            1   \n",
+      "3                 Apr-16                        0.0            1   \n",
+      "4                 May-16                        0.0            1   \n",
+      "...                  ...                        ...          ...   \n",
+      "39712             Jun-10                        NaN            1   \n",
+      "39713             Jul-10                        NaN            1   \n",
+      "39714             Jun-07                        NaN            1   \n",
+      "39715             Jun-07                        NaN            1   \n",
+      "39716             Jun-10                        NaN            1   \n",
+      "\n",
+      "      application_type acc_now_delinq chargeoff_within_12_mths delinq_amnt  \\\n",
+      "0           INDIVIDUAL              0                      0.0           0   \n",
+      "1           INDIVIDUAL              0                      0.0           0   \n",
+      "2           INDIVIDUAL              0                      0.0           0   \n",
+      "3           INDIVIDUAL              0                      0.0           0   \n",
+      "4           INDIVIDUAL              0                      0.0           0   \n",
+      "...                ...            ...                      ...         ...   \n",
+      "39712       INDIVIDUAL              0                      NaN           0   \n",
+      "39713       INDIVIDUAL              0                      NaN           0   \n",
+      "39714       INDIVIDUAL              0                      NaN           0   \n",
+      "39715       INDIVIDUAL              0                      NaN           0   \n",
+      "39716       INDIVIDUAL              0                      NaN           0   \n",
+      "\n",
+      "      pub_rec_bankruptcies tax_liens  \n",
+      "0                      0.0       0.0  \n",
+      "1                      0.0       0.0  \n",
+      "2                      0.0       0.0  \n",
+      "3                      0.0       0.0  \n",
+      "4                      0.0       0.0  \n",
+      "...                    ...       ...  \n",
+      "39712                  NaN       NaN  \n",
+      "39713                  NaN       NaN  \n",
+      "39714                  NaN       NaN  \n",
+      "39715                  NaN       NaN  \n",
+      "39716                  NaN       NaN  \n",
+      "\n",
+      "[39717 rows x 57 columns]>\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(loan_new.info)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Fully Paid     32950\n",
+       "Charged Off     5627\n",
+       "Current         1140\n",
+       "Name: loan_status, dtype: int64"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "loan_new['loan_status'].value_counts()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/shivajirao/opt/anaconda3/lib/python3.7/site-packages/ipykernel_launcher.py:1: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame.\n",
+      "Try using .loc[row_indexer,col_indexer] = value instead\n",
+      "\n",
+      "See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy\n",
+      "  \"\"\"Entry point for launching an IPython kernel.\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new['status_of_loans'] = loan_new['loan_status'].map({\"Fully Paid\":0, \"Current\":1, \"Charged Off\":2})"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 52,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0     0\n",
+       "1     2\n",
+       "2     0\n",
+       "3     0\n",
+       "4     1\n",
+       "5     0\n",
+       "6     0\n",
+       "7     0\n",
+       "8     2\n",
+       "9     2\n",
+       "10    0\n",
+       "11    0\n",
+       "12    2\n",
+       "13    0\n",
+       "14    2\n",
+       "15    0\n",
+       "16    0\n",
+       "17    0\n",
+       "18    0\n",
+       "19    0\n",
+       "Name: status_of_loans, dtype: int64"
+      ]
+     },
+     "execution_count": 52,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "loan_new['status_of_loans'].head(20)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "Status_of_Loan TO BE PREDICTED "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0      Fully Paid\n",
+       "1     Charged Off\n",
+       "2      Fully Paid\n",
+       "3      Fully Paid\n",
+       "4         Current\n",
+       "5      Fully Paid\n",
+       "6      Fully Paid\n",
+       "7      Fully Paid\n",
+       "8     Charged Off\n",
+       "9     Charged Off\n",
+       "10     Fully Paid\n",
+       "11     Fully Paid\n",
+       "12    Charged Off\n",
+       "13     Fully Paid\n",
+       "14    Charged Off\n",
+       "15     Fully Paid\n",
+       "16     Fully Paid\n",
+       "17     Fully Paid\n",
+       "18     Fully Paid\n",
+       "19     Fully Paid\n",
+       "Name: loan_status, dtype: object"
+      ]
+     },
+     "execution_count": 28,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "loan_new['loan_status'].head(20)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 56,
+   "metadata": {
+    "collapsed": true,
+    "jupyter": {
+     "outputs_hidden": true
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<bound method DataFrame.info of        loan_amnt  funded_amnt_inv        term int_rate  installment grade  \\\n",
+       "0           5000           4975.0   36 months   10.65%       162.87     B   \n",
+       "1           2500           2500.0   60 months   15.27%        59.83     C   \n",
+       "2           2400           2400.0   36 months   15.96%        84.33     C   \n",
+       "3          10000          10000.0   36 months   13.49%       339.31     C   \n",
+       "4           3000           3000.0   60 months   12.69%        67.79     B   \n",
+       "...          ...              ...         ...      ...          ...   ...   \n",
+       "39712       2500           1075.0   36 months    8.07%        78.42     A   \n",
+       "39713       8500            875.0   36 months   10.28%       275.38     C   \n",
+       "39714       5000           1325.0   36 months    8.07%       156.84     A   \n",
+       "39715       5000            650.0   36 months    7.43%       155.38     A   \n",
+       "39716       7500            800.0   36 months   13.75%       255.43     E   \n",
+       "\n",
+       "      sub_grade emp_length home_ownership  annual_inc  ... earliest_cr_line  \\\n",
+       "0            B2  10+ years           RENT     24000.0  ...           Jan-85   \n",
+       "1            C4   < 1 year           RENT     30000.0  ...           Apr-99   \n",
+       "2            C5  10+ years           RENT     12252.0  ...           Nov-01   \n",
+       "3            C1  10+ years           RENT     49200.0  ...           Feb-96   \n",
+       "4            B5     1 year           RENT     80000.0  ...           Jan-96   \n",
+       "...         ...        ...            ...         ...  ...              ...   \n",
+       "39712        A4    4 years       MORTGAGE    110000.0  ...           Nov-90   \n",
+       "39713        C1    3 years           RENT     18000.0  ...           Dec-86   \n",
+       "39714        A4   < 1 year       MORTGAGE    100000.0  ...           Oct-98   \n",
+       "39715        A2   < 1 year       MORTGAGE    200000.0  ...           Nov-88   \n",
+       "39716        E2   < 1 year            OWN     22000.0  ...           Oct-03   \n",
+       "\n",
+       "      inq_last_6mths mths_since_last_delinq open_acc  pub_rec revol_util  \\\n",
+       "0                  1                    NaN        3        0     83.70%   \n",
+       "1                  5                    NaN        3        0      9.40%   \n",
+       "2                  2                    NaN        2        0     98.50%   \n",
+       "3                  1                   35.0       10        0        21%   \n",
+       "4                  0                   38.0       15        0     53.90%   \n",
+       "...              ...                    ...      ...      ...        ...   \n",
+       "39712              0                    0.0       13        0     13.10%   \n",
+       "39713              1                    5.0        6        0     26.90%   \n",
+       "39714              0                    0.0       11        0     19.40%   \n",
+       "39715              0                    0.0       17        0      0.70%   \n",
+       "39716              0                   11.0        7        0     51.50%   \n",
+       "\n",
+       "       total_acc  recoveries  delinq_amnt  status_of_loans  \n",
+       "0              9        0.00            0                0  \n",
+       "1              4      117.08            0                2  \n",
+       "2             10        0.00            0                0  \n",
+       "3             37        0.00            0                0  \n",
+       "4             38        0.00            0                1  \n",
+       "...          ...         ...          ...              ...  \n",
+       "39712         40        0.00            0                0  \n",
+       "39713          9        0.00            0                0  \n",
+       "39714         20        0.00            0                0  \n",
+       "39715         26        0.00            0                0  \n",
+       "39716          8        0.00            0                0  \n",
+       "\n",
+       "[39717 rows x 25 columns]>"
+      ]
+     },
+     "execution_count": 56,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "loan_new.info"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "B    12020\n",
+       "A    10085\n",
+       "C     8098\n",
+       "D     5307\n",
+       "E     2842\n",
+       "F     1049\n",
+       "G      316\n",
+       "Name: grade, dtype: int64"
+      ]
+     },
+     "execution_count": 32,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "loan_new['grade'].value_counts()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "GRADE IS A CATEGORICAL VARIABLE TO BE ONEHOTENCODED"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from category_encoders import OneHotEncoder"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 74,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ohe = OneHotEncoder(cols=['grade'], use_cat_names=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.model_selection import train_test_split"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 39717 entries, 0 to 39716\n",
+      "Data columns (total 58 columns):\n",
+      " #   Column                      Non-Null Count  Dtype  \n",
+      "---  ------                      --------------  -----  \n",
+      " 0   id                          39717 non-null  int64  \n",
+      " 1   member_id                   39717 non-null  int64  \n",
+      " 2   loan_amnt                   39717 non-null  int64  \n",
+      " 3   funded_amnt                 39717 non-null  int64  \n",
+      " 4   funded_amnt_inv             39717 non-null  float64\n",
+      " 5   term                        39717 non-null  object \n",
+      " 6   int_rate                    39717 non-null  object \n",
+      " 7   installment                 39717 non-null  float64\n",
+      " 8   grade                       39717 non-null  object \n",
+      " 9   sub_grade                   39717 non-null  object \n",
+      " 10  emp_title                   37258 non-null  object \n",
+      " 11  emp_length                  38642 non-null  object \n",
+      " 12  home_ownership              39717 non-null  object \n",
+      " 13  annual_inc                  39717 non-null  float64\n",
+      " 14  verification_status         39717 non-null  object \n",
+      " 15  issue_d                     39717 non-null  object \n",
+      " 16  loan_status                 39717 non-null  object \n",
+      " 17  pymnt_plan                  39717 non-null  object \n",
+      " 18  url                         39717 non-null  object \n",
+      " 19  desc                        26777 non-null  object \n",
+      " 20  purpose                     39717 non-null  object \n",
+      " 21  title                       39706 non-null  object \n",
+      " 22  zip_code                    39717 non-null  object \n",
+      " 23  addr_state                  39717 non-null  object \n",
+      " 24  dti                         39717 non-null  float64\n",
+      " 25  delinq_2yrs                 39717 non-null  int64  \n",
+      " 26  earliest_cr_line            39717 non-null  object \n",
+      " 27  inq_last_6mths              39717 non-null  int64  \n",
+      " 28  mths_since_last_delinq      14035 non-null  float64\n",
+      " 29  mths_since_last_record      2786 non-null   float64\n",
+      " 30  open_acc                    39717 non-null  int64  \n",
+      " 31  pub_rec                     39717 non-null  int64  \n",
+      " 32  revol_bal                   39717 non-null  int64  \n",
+      " 33  revol_util                  39667 non-null  object \n",
+      " 34  total_acc                   39717 non-null  int64  \n",
+      " 35  initial_list_status         39717 non-null  object \n",
+      " 36  out_prncp                   39717 non-null  float64\n",
+      " 37  out_prncp_inv               39717 non-null  float64\n",
+      " 38  total_pymnt                 39717 non-null  float64\n",
+      " 39  total_pymnt_inv             39717 non-null  float64\n",
+      " 40  total_rec_prncp             39717 non-null  float64\n",
+      " 41  total_rec_int               39717 non-null  float64\n",
+      " 42  total_rec_late_fee          39717 non-null  float64\n",
+      " 43  recoveries                  39717 non-null  float64\n",
+      " 44  collection_recovery_fee     39717 non-null  float64\n",
+      " 45  last_pymnt_d                39646 non-null  object \n",
+      " 46  last_pymnt_amnt             39717 non-null  float64\n",
+      " 47  next_pymnt_d                1140 non-null   object \n",
+      " 48  last_credit_pull_d          39715 non-null  object \n",
+      " 49  collections_12_mths_ex_med  39661 non-null  float64\n",
+      " 50  policy_code                 39717 non-null  int64  \n",
+      " 51  application_type            39717 non-null  object \n",
+      " 52  acc_now_delinq              39717 non-null  int64  \n",
+      " 53  chargeoff_within_12_mths    39661 non-null  float64\n",
+      " 54  delinq_amnt                 39717 non-null  int64  \n",
+      " 55  pub_rec_bankruptcies        39020 non-null  float64\n",
+      " 56  tax_liens                   39678 non-null  float64\n",
+      " 57  status_of_loans             39717 non-null  int64  \n",
+      "dtypes: float64(20), int64(14), object(24)\n",
+      "memory usage: 17.6+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['id', 'member_id', 'loan_amnt', 'funded_amnt', 'funded_amnt_inv',\n",
+       "       'term', 'int_rate', 'installment', 'grade', 'sub_grade', 'emp_title',\n",
+       "       'emp_length', 'home_ownership', 'annual_inc', 'verification_status',\n",
+       "       'issue_d', 'loan_status', 'pymnt_plan', 'url', 'desc', 'purpose',\n",
+       "       'title', 'zip_code', 'addr_state', 'dti', 'delinq_2yrs',\n",
+       "       'earliest_cr_line', 'inq_last_6mths', 'mths_since_last_delinq',\n",
+       "       'mths_since_last_record', 'open_acc', 'pub_rec', 'revol_bal',\n",
+       "       'revol_util', 'total_acc', 'initial_list_status', 'out_prncp',\n",
+       "       'out_prncp_inv', 'total_pymnt', 'total_pymnt_inv', 'total_rec_prncp',\n",
+       "       'total_rec_int', 'total_rec_late_fee', 'recoveries',\n",
+       "       'collection_recovery_fee', 'last_pymnt_d', 'last_pymnt_amnt',\n",
+       "       'next_pymnt_d', 'last_credit_pull_d', 'collections_12_mths_ex_med',\n",
+       "       'policy_code', 'application_type', 'acc_now_delinq',\n",
+       "       'chargeoff_within_12_mths', 'delinq_amnt', 'pub_rec_bankruptcies',\n",
+       "       'tax_liens', 'status_of_loans'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 38,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "loan_new.columns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "loan_new.to_csv(\"./archive(1)/loan_new.csv\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "VARIABLES TO DROP FROM THE FILE FOR DATA CLEANING"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 44,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "colsToDrop = [\"id\", \"member_id\", \"funded_amnt\", \"emp_title\", \"pymnt_plan\", \"url\", \"desc\", \n",
+    " \"title\", \"zip_code\", \"delinq_2yrs\", \n",
+    " \"mths_since_last_record\", \"revol_bal\", \"initial_list_status\", \n",
+    " \"out_prncp\", \"out_prncp_inv\", \"total_pymnt\", \"total_pymnt_inv\",\n",
+    " \"total_rec_prncp\", \"total_rec_int\", \"total_rec_late_fee\", \n",
+    " \"collection_recovery_fee\", \"last_pymnt_d\", \n",
+    " \"last_pymnt_amnt\", \"next_pymnt_d\", \"last_credit_pull_d\", \n",
+    " \"collections_12_mths_ex_med\", \"policy_code\", \"acc_now_delinq\",\n",
+    " \"chargeoff_within_12_mths\", \"tax_liens\", \n",
+    " \"application_type\", \"pub_rec_bankruptcies\", \"addr_state\"]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 46,
+   "metadata": {
+    "collapsed": true,
+    "jupyter": {
+     "outputs_hidden": true
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['id',\n",
+       " 'member_id',\n",
+       " 'funded_amnt',\n",
+       " 'emp_title',\n",
+       " 'pymnt_plan',\n",
+       " 'url',\n",
+       " 'desc',\n",
+       " 'title',\n",
+       " 'zip_code',\n",
+       " 'delinq_2yrs',\n",
+       " 'mths_since_last_record',\n",
+       " 'revol_bal',\n",
+       " 'initial_list_status',\n",
+       " 'out_prncp',\n",
+       " 'out_prncp_inv',\n",
+       " 'total_pymnt',\n",
+       " 'total_pymnt_inv',\n",
+       " 'total_rec_prncp',\n",
+       " 'total_rec_int',\n",
+       " 'total_rec_late_fee',\n",
+       " 'collection_recovery_fee',\n",
+       " 'last_pymnt_d',\n",
+       " 'last_pymnt_amnt',\n",
+       " 'next_pymnt_d',\n",
+       " 'last_credit_pull_d',\n",
+       " 'collections_12_mths_ex_med',\n",
+       " 'policy_code',\n",
+       " 'acc_now_delinq',\n",
+       " 'chargeoff_within_12_mths',\n",
+       " 'tax_liens',\n",
+       " 'application_type',\n",
+       " 'pub_rec_bankruptcies',\n",
+       " 'addr_state']"
+      ]
+     },
+     "execution_count": 46,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "colsToDrop"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 47,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/shivajirao/opt/anaconda3/lib/python3.7/site-packages/pandas/core/frame.py:3997: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame\n",
+      "\n",
+      "See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy\n",
+      "  errors=errors,\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new.drop(colsToDrop, axis=1, inplace=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 39717 entries, 0 to 39716\n",
+      "Data columns (total 25 columns):\n",
+      " #   Column                  Non-Null Count  Dtype  \n",
+      "---  ------                  --------------  -----  \n",
+      " 0   loan_amnt               39717 non-null  int64  \n",
+      " 1   funded_amnt_inv         39717 non-null  float64\n",
+      " 2   term                    39717 non-null  object \n",
+      " 3   int_rate                39717 non-null  object \n",
+      " 4   installment             39717 non-null  float64\n",
+      " 5   grade                   39717 non-null  object \n",
+      " 6   sub_grade               39717 non-null  object \n",
+      " 7   emp_length              38642 non-null  object \n",
+      " 8   home_ownership          39717 non-null  object \n",
+      " 9   annual_inc              39717 non-null  float64\n",
+      " 10  verification_status     39717 non-null  object \n",
+      " 11  issue_d                 39717 non-null  object \n",
+      " 12  loan_status             39717 non-null  object \n",
+      " 13  purpose                 39717 non-null  object \n",
+      " 14  dti                     39717 non-null  float64\n",
+      " 15  earliest_cr_line        39717 non-null  object \n",
+      " 16  inq_last_6mths          39717 non-null  int64  \n",
+      " 17  mths_since_last_delinq  14035 non-null  float64\n",
+      " 18  open_acc                39717 non-null  int64  \n",
+      " 19  pub_rec                 39717 non-null  int64  \n",
+      " 20  revol_util              39667 non-null  object \n",
+      " 21  total_acc               39717 non-null  int64  \n",
+      " 22  recoveries              39717 non-null  float64\n",
+      " 23  delinq_amnt             39717 non-null  int64  \n",
+      " 24  status_of_loans         39717 non-null  int64  \n",
+      "dtypes: float64(6), int64(7), object(12)\n",
+      "memory usage: 7.6+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 58,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "loan_new.to_csv(\"./archive(1)/loan_new_updated.csv\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 60,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 39717 entries, 0 to 39716\n",
+      "Data columns (total 25 columns):\n",
+      " #   Column                  Non-Null Count  Dtype  \n",
+      "---  ------                  --------------  -----  \n",
+      " 0   loan_amnt               39717 non-null  int64  \n",
+      " 1   funded_amnt_inv         39717 non-null  float64\n",
+      " 2   term                    39717 non-null  object \n",
+      " 3   int_rate                39717 non-null  object \n",
+      " 4   installment             39717 non-null  float64\n",
+      " 5   grade                   39717 non-null  object \n",
+      " 6   sub_grade               39717 non-null  object \n",
+      " 7   emp_length              38642 non-null  object \n",
+      " 8   home_ownership          39717 non-null  object \n",
+      " 9   annual_inc              39717 non-null  float64\n",
+      " 10  verification_status     39717 non-null  object \n",
+      " 11  issue_d                 39717 non-null  object \n",
+      " 12  loan_status             39717 non-null  object \n",
+      " 13  purpose                 39717 non-null  object \n",
+      " 14  dti                     39717 non-null  float64\n",
+      " 15  earliest_cr_line        39717 non-null  object \n",
+      " 16  inq_last_6mths          39717 non-null  int64  \n",
+      " 17  mths_since_last_delinq  14035 non-null  float64\n",
+      " 18  open_acc                39717 non-null  int64  \n",
+      " 19  pub_rec                 39717 non-null  int64  \n",
+      " 20  revol_util              39667 non-null  object \n",
+      " 21  total_acc               39717 non-null  int64  \n",
+      " 22  recoveries              39717 non-null  float64\n",
+      " 23  delinq_amnt             39717 non-null  int64  \n",
+      " 24  status_of_loans         39717 non-null  int64  \n",
+      "dtypes: float64(6), int64(7), object(12)\n",
+      "memory usage: 7.6+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 63,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "NewLoans = loan_new[['loan_amnt', 'term']]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 99,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/shivajirao/opt/anaconda3/lib/python3.7/site-packages/ipykernel_launcher.py:1: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame.\n",
+      "Try using .loc[row_indexer,col_indexer] = value instead\n",
+      "\n",
+      "See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy\n",
+      "  \"\"\"Entry point for launching an IPython kernel.\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new['life'] = loan_new['term'].str.extract(\"(\\d*\\.?\\d+)\", expand=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 100,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0        36\n",
+       "1        60\n",
+       "2        36\n",
+       "3        36\n",
+       "4        60\n",
+       "         ..\n",
+       "39712    36\n",
+       "39713    36\n",
+       "39714    36\n",
+       "39715    36\n",
+       "39716    36\n",
+       "Name: life, Length: 39717, dtype: object"
+      ]
+     },
+     "execution_count": 100,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "loan_new['life']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 112,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/shivajirao/opt/anaconda3/lib/python3.7/site-packages/ipykernel_launcher.py:1: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame.\n",
+      "Try using .loc[row_indexer,col_indexer] = value instead\n",
+      "\n",
+      "See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy\n",
+      "  \"\"\"Entry point for launching an IPython kernel.\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new['life_new'] = pd.to_numeric(loan_new['life'], errors='coerce')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 113,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 39717 entries, 0 to 39716\n",
+      "Data columns (total 28 columns):\n",
+      " #   Column                  Non-Null Count  Dtype  \n",
+      "---  ------                  --------------  -----  \n",
+      " 0   loan_amnt               39717 non-null  int64  \n",
+      " 1   funded_amnt_inv         39717 non-null  float64\n",
+      " 2   term                    39717 non-null  object \n",
+      " 3   int_rate                39717 non-null  object \n",
+      " 4   installment             39717 non-null  float64\n",
+      " 5   grade                   39717 non-null  object \n",
+      " 6   sub_grade               39717 non-null  object \n",
+      " 7   emp_length              38642 non-null  object \n",
+      " 8   home_ownership          39717 non-null  object \n",
+      " 9   annual_inc              39717 non-null  float64\n",
+      " 10  verification_status     39717 non-null  object \n",
+      " 11  issue_d                 39717 non-null  object \n",
+      " 12  loan_status             39717 non-null  object \n",
+      " 13  purpose                 39717 non-null  object \n",
+      " 14  dti                     39717 non-null  float64\n",
+      " 15  earliest_cr_line        39717 non-null  object \n",
+      " 16  inq_last_6mths          39717 non-null  int64  \n",
+      " 17  mths_since_last_delinq  14035 non-null  float64\n",
+      " 18  open_acc                39717 non-null  int64  \n",
+      " 19  pub_rec                 39717 non-null  int64  \n",
+      " 20  revol_util              39667 non-null  object \n",
+      " 21  total_acc               39717 non-null  int64  \n",
+      " 22  recoveries              39717 non-null  float64\n",
+      " 23  delinq_amnt             39717 non-null  int64  \n",
+      " 24  status_of_loans         39717 non-null  int64  \n",
+      " 25  life                    39717 non-null  object \n",
+      " 26  interest_rate           39717 non-null  object \n",
+      " 27  life_new                39717 non-null  int64  \n",
+      "dtypes: float64(6), int64(8), object(14)\n",
+      "memory usage: 8.5+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 101,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/shivajirao/opt/anaconda3/lib/python3.7/site-packages/ipykernel_launcher.py:1: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame.\n",
+      "Try using .loc[row_indexer,col_indexer] = value instead\n",
+      "\n",
+      "See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy\n",
+      "  \"\"\"Entry point for launching an IPython kernel.\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new['interest_rate'] = loan_new['int_rate'].str.extract(\"(\\d*\\.?\\d+)\", expand=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 103,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0        10.65\n",
+       "1        15.27\n",
+       "2        15.96\n",
+       "3        13.49\n",
+       "4        12.69\n",
+       "         ...  \n",
+       "39712     8.07\n",
+       "39713    10.28\n",
+       "39714     8.07\n",
+       "39715     7.43\n",
+       "39716    13.75\n",
+       "Name: interest_rate, Length: 39717, dtype: object"
+      ]
+     },
+     "execution_count": 103,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "loan_new['interest_rate']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 115,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/shivajirao/opt/anaconda3/lib/python3.7/site-packages/ipykernel_launcher.py:1: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame.\n",
+      "Try using .loc[row_indexer,col_indexer] = value instead\n",
+      "\n",
+      "See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy\n",
+      "  \"\"\"Entry point for launching an IPython kernel.\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new['interest_rate_new'] = pd.to_numeric(loan_new['interest_rate'], errors='coerce')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 116,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 39717 entries, 0 to 39716\n",
+      "Data columns (total 29 columns):\n",
+      " #   Column                  Non-Null Count  Dtype  \n",
+      "---  ------                  --------------  -----  \n",
+      " 0   loan_amnt               39717 non-null  int64  \n",
+      " 1   funded_amnt_inv         39717 non-null  float64\n",
+      " 2   term                    39717 non-null  object \n",
+      " 3   int_rate                39717 non-null  object \n",
+      " 4   installment             39717 non-null  float64\n",
+      " 5   grade                   39717 non-null  object \n",
+      " 6   sub_grade               39717 non-null  object \n",
+      " 7   emp_length              38642 non-null  object \n",
+      " 8   home_ownership          39717 non-null  object \n",
+      " 9   annual_inc              39717 non-null  float64\n",
+      " 10  verification_status     39717 non-null  object \n",
+      " 11  issue_d                 39717 non-null  object \n",
+      " 12  loan_status             39717 non-null  object \n",
+      " 13  purpose                 39717 non-null  object \n",
+      " 14  dti                     39717 non-null  float64\n",
+      " 15  earliest_cr_line        39717 non-null  object \n",
+      " 16  inq_last_6mths          39717 non-null  int64  \n",
+      " 17  mths_since_last_delinq  14035 non-null  float64\n",
+      " 18  open_acc                39717 non-null  int64  \n",
+      " 19  pub_rec                 39717 non-null  int64  \n",
+      " 20  revol_util              39667 non-null  object \n",
+      " 21  total_acc               39717 non-null  int64  \n",
+      " 22  recoveries              39717 non-null  float64\n",
+      " 23  delinq_amnt             39717 non-null  int64  \n",
+      " 24  status_of_loans         39717 non-null  int64  \n",
+      " 25  life                    39717 non-null  object \n",
+      " 26  interest_rate           39717 non-null  object \n",
+      " 27  life_new                39717 non-null  int64  \n",
+      " 28  interest_rate_new       39717 non-null  float64\n",
+      "dtypes: float64(7), int64(8), object(14)\n",
+      "memory usage: 8.8+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "loan_new.info()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 117,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "X1 = loan_new[['loan_amnt', 'life_new', 'interest_rate_new', 'installment', 'grade', 'annual_inc']]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 118,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 39717 entries, 0 to 39716\n",
+      "Data columns (total 6 columns):\n",
+      " #   Column             Non-Null Count  Dtype  \n",
+      "---  ------             --------------  -----  \n",
+      " 0   loan_amnt          39717 non-null  int64  \n",
+      " 1   life_new           39717 non-null  int64  \n",
+      " 2   interest_rate_new  39717 non-null  float64\n",
+      " 3   installment        39717 non-null  float64\n",
+      " 4   grade              39717 non-null  object \n",
+      " 5   annual_inc         39717 non-null  float64\n",
+      "dtypes: float64(3), int64(2), object(1)\n",
+      "memory usage: 1.8+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "X.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 119,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>loan_amnt</th>\n",
+       "      <th>life_new</th>\n",
+       "      <th>interest_rate_new</th>\n",
+       "      <th>installment</th>\n",
+       "      <th>grade</th>\n",
+       "      <th>annual_inc</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>5000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>10.65</td>\n",
+       "      <td>162.87</td>\n",
+       "      <td>B</td>\n",
+       "      <td>24000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2500</td>\n",
+       "      <td>60</td>\n",
+       "      <td>15.27</td>\n",
+       "      <td>59.83</td>\n",
+       "      <td>C</td>\n",
+       "      <td>30000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2400</td>\n",
+       "      <td>36</td>\n",
+       "      <td>15.96</td>\n",
+       "      <td>84.33</td>\n",
+       "      <td>C</td>\n",
+       "      <td>12252.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>10000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>13.49</td>\n",
+       "      <td>339.31</td>\n",
+       "      <td>C</td>\n",
+       "      <td>49200.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>3000</td>\n",
+       "      <td>60</td>\n",
+       "      <td>12.69</td>\n",
+       "      <td>67.79</td>\n",
+       "      <td>B</td>\n",
+       "      <td>80000.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   loan_amnt  life_new  interest_rate_new  installment grade  annual_inc\n",
+       "0       5000        36              10.65       162.87     B     24000.0\n",
+       "1       2500        60              15.27        59.83     C     30000.0\n",
+       "2       2400        36              15.96        84.33     C     12252.0\n",
+       "3      10000        36              13.49       339.31     C     49200.0\n",
+       "4       3000        60              12.69        67.79     B     80000.0"
+      ]
+     },
+     "execution_count": 119,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 107,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "pandas.core.frame.DataFrame"
+      ]
+     },
+     "execution_count": 107,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "type(X)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 120,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>loan_amnt</th>\n",
+       "      <th>life_new</th>\n",
+       "      <th>interest_rate_new</th>\n",
+       "      <th>installment</th>\n",
+       "      <th>grade</th>\n",
+       "      <th>annual_inc</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>5000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>10.65</td>\n",
+       "      <td>162.87</td>\n",
+       "      <td>B</td>\n",
+       "      <td>24000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2500</td>\n",
+       "      <td>60</td>\n",
+       "      <td>15.27</td>\n",
+       "      <td>59.83</td>\n",
+       "      <td>C</td>\n",
+       "      <td>30000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2400</td>\n",
+       "      <td>36</td>\n",
+       "      <td>15.96</td>\n",
+       "      <td>84.33</td>\n",
+       "      <td>C</td>\n",
+       "      <td>12252.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>10000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>13.49</td>\n",
+       "      <td>339.31</td>\n",
+       "      <td>C</td>\n",
+       "      <td>49200.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>3000</td>\n",
+       "      <td>60</td>\n",
+       "      <td>12.69</td>\n",
+       "      <td>67.79</td>\n",
+       "      <td>B</td>\n",
+       "      <td>80000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39712</th>\n",
+       "      <td>2500</td>\n",
+       "      <td>36</td>\n",
+       "      <td>8.07</td>\n",
+       "      <td>78.42</td>\n",
+       "      <td>A</td>\n",
+       "      <td>110000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39713</th>\n",
+       "      <td>8500</td>\n",
+       "      <td>36</td>\n",
+       "      <td>10.28</td>\n",
+       "      <td>275.38</td>\n",
+       "      <td>C</td>\n",
+       "      <td>18000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39714</th>\n",
+       "      <td>5000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>8.07</td>\n",
+       "      <td>156.84</td>\n",
+       "      <td>A</td>\n",
+       "      <td>100000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39715</th>\n",
+       "      <td>5000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>7.43</td>\n",
+       "      <td>155.38</td>\n",
+       "      <td>A</td>\n",
+       "      <td>200000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>39716</th>\n",
+       "      <td>7500</td>\n",
+       "      <td>36</td>\n",
+       "      <td>13.75</td>\n",
+       "      <td>255.43</td>\n",
+       "      <td>E</td>\n",
+       "      <td>22000.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>39717 rows × 6 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       loan_amnt  life_new  interest_rate_new  installment grade  annual_inc\n",
+       "0           5000        36              10.65       162.87     B     24000.0\n",
+       "1           2500        60              15.27        59.83     C     30000.0\n",
+       "2           2400        36              15.96        84.33     C     12252.0\n",
+       "3          10000        36              13.49       339.31     C     49200.0\n",
+       "4           3000        60              12.69        67.79     B     80000.0\n",
+       "...          ...       ...                ...          ...   ...         ...\n",
+       "39712       2500        36               8.07        78.42     A    110000.0\n",
+       "39713       8500        36              10.28       275.38     C     18000.0\n",
+       "39714       5000        36               8.07       156.84     A    100000.0\n",
+       "39715       5000        36               7.43       155.38     A    200000.0\n",
+       "39716       7500        36              13.75       255.43     E     22000.0\n",
+       "\n",
+       "[39717 rows x 6 columns]"
+      ]
+     },
+     "execution_count": 120,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 121,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(39717, 6)"
+      ]
+     },
+     "execution_count": 121,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 122,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "y = loan_new['status_of_loans']"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "TRAIN TEST SPLIT"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 123,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1234)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 124,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(29787, 6)"
+      ]
+     },
+     "execution_count": 124,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_train.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 125,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(9930, 6)"
+      ]
+     },
+     "execution_count": 125,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_test.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 126,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(29787,)"
+      ]
+     },
+     "execution_count": 126,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "y_train.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 127,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(9930,)"
+      ]
+     },
+     "execution_count": 127,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "y_test.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 128,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "OneHotEncoder(cols=['grade'], drop_invariant=False, handle_missing='value',\n",
+       "              handle_unknown='value', return_df=True, use_cat_names=True,\n",
+       "              verbose=0)"
+      ]
+     },
+     "execution_count": 128,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "ohe.fit(X_train, y_train)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 129,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "X_train_cats = ohe.transform(X_train, y_train)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 130,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>loan_amnt</th>\n",
+       "      <th>life_new</th>\n",
+       "      <th>interest_rate_new</th>\n",
+       "      <th>installment</th>\n",
+       "      <th>grade_D</th>\n",
+       "      <th>grade_B</th>\n",
+       "      <th>grade_A</th>\n",
+       "      <th>grade_E</th>\n",
+       "      <th>grade_C</th>\n",
+       "      <th>grade_G</th>\n",
+       "      <th>grade_F</th>\n",
+       "      <th>annual_inc</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>15043</th>\n",
+       "      <td>12000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>15.99</td>\n",
+       "      <td>421.83</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>113000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>29531</th>\n",
+       "      <td>4800</td>\n",
+       "      <td>60</td>\n",
+       "      <td>16.07</td>\n",
+       "      <td>116.91</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>16000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>25485</th>\n",
+       "      <td>24000</td>\n",
+       "      <td>60</td>\n",
+       "      <td>11.49</td>\n",
+       "      <td>527.71</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>60000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>13745</th>\n",
+       "      <td>3500</td>\n",
+       "      <td>36</td>\n",
+       "      <td>11.49</td>\n",
+       "      <td>115.40</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>35000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>7169</th>\n",
+       "      <td>29700</td>\n",
+       "      <td>60</td>\n",
+       "      <td>12.69</td>\n",
+       "      <td>671.07</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>78000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>32399</th>\n",
+       "      <td>24250</td>\n",
+       "      <td>36</td>\n",
+       "      <td>15.33</td>\n",
+       "      <td>844.59</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>98000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>17048</th>\n",
+       "      <td>11200</td>\n",
+       "      <td>36</td>\n",
+       "      <td>5.42</td>\n",
+       "      <td>337.80</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>31200.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>23924</th>\n",
+       "      <td>8500</td>\n",
+       "      <td>60</td>\n",
+       "      <td>9.99</td>\n",
+       "      <td>166.22</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>36000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>34086</th>\n",
+       "      <td>6000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>13.92</td>\n",
+       "      <td>204.83</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>28000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>27439</th>\n",
+       "      <td>16000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>7.88</td>\n",
+       "      <td>500.50</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>65000.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>29787 rows × 12 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       loan_amnt  life_new  interest_rate_new  installment  grade_D  grade_B  \\\n",
+       "15043      12000        36              15.99       421.83        1        0   \n",
+       "29531       4800        60              16.07       116.91        1        0   \n",
+       "25485      24000        60              11.49       527.71        0        1   \n",
+       "13745       3500        36              11.49       115.40        0        1   \n",
+       "7169       29700        60              12.69       671.07        0        1   \n",
+       "...          ...       ...                ...          ...      ...      ...   \n",
+       "32399      24250        36              15.33       844.59        1        0   \n",
+       "17048      11200        36               5.42       337.80        0        0   \n",
+       "23924       8500        60               9.99       166.22        0        1   \n",
+       "34086       6000        36              13.92       204.83        0        0   \n",
+       "27439      16000        36               7.88       500.50        0        0   \n",
+       "\n",
+       "       grade_A  grade_E  grade_C  grade_G  grade_F  annual_inc  \n",
+       "15043        0        0        0        0        0    113000.0  \n",
+       "29531        0        0        0        0        0     16000.0  \n",
+       "25485        0        0        0        0        0     60000.0  \n",
+       "13745        0        0        0        0        0     35000.0  \n",
+       "7169         0        0        0        0        0     78000.0  \n",
+       "...        ...      ...      ...      ...      ...         ...  \n",
+       "32399        0        0        0        0        0     98000.0  \n",
+       "17048        1        0        0        0        0     31200.0  \n",
+       "23924        0        0        0        0        0     36000.0  \n",
+       "34086        0        0        1        0        0     28000.0  \n",
+       "27439        1        0        0        0        0     65000.0  \n",
+       "\n",
+       "[29787 rows x 12 columns]"
+      ]
+     },
+     "execution_count": 130,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_train_cats"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 131,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "X_test_cats = ohe.transform(X_test, y_test)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 132,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>loan_amnt</th>\n",
+       "      <th>life_new</th>\n",
+       "      <th>interest_rate_new</th>\n",
+       "      <th>installment</th>\n",
+       "      <th>grade_D</th>\n",
+       "      <th>grade_B</th>\n",
+       "      <th>grade_A</th>\n",
+       "      <th>grade_E</th>\n",
+       "      <th>grade_C</th>\n",
+       "      <th>grade_G</th>\n",
+       "      <th>grade_F</th>\n",
+       "      <th>annual_inc</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>17032</th>\n",
+       "      <td>21250</td>\n",
+       "      <td>60</td>\n",
+       "      <td>20.11</td>\n",
+       "      <td>564.30</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>65000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>35328</th>\n",
+       "      <td>15000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>13.22</td>\n",
+       "      <td>507.01</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>50000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>16617</th>\n",
+       "      <td>5000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>5.42</td>\n",
+       "      <td>150.80</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>31000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>8800</th>\n",
+       "      <td>30000</td>\n",
+       "      <td>60</td>\n",
+       "      <td>19.29</td>\n",
+       "      <td>783.02</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>80000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>22444</th>\n",
+       "      <td>4000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>5.79</td>\n",
+       "      <td>121.31</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>33600.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>29359</th>\n",
+       "      <td>10000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>7.88</td>\n",
+       "      <td>238.52</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>84000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>19007</th>\n",
+       "      <td>8000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>5.42</td>\n",
+       "      <td>241.28</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>57000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>14331</th>\n",
+       "      <td>24000</td>\n",
+       "      <td>60</td>\n",
+       "      <td>15.99</td>\n",
+       "      <td>583.51</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>100000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>32513</th>\n",
+       "      <td>25000</td>\n",
+       "      <td>36</td>\n",
+       "      <td>19.04</td>\n",
+       "      <td>916.95</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>95000.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>17393</th>\n",
+       "      <td>4800</td>\n",
+       "      <td>36</td>\n",
+       "      <td>5.42</td>\n",
+       "      <td>144.77</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>96900.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>9930 rows × 12 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       loan_amnt  life_new  interest_rate_new  installment  grade_D  grade_B  \\\n",
+       "17032      21250        60              20.11       564.30        0        0   \n",
+       "35328      15000        36              13.22       507.01        0        0   \n",
+       "16617       5000        36               5.42       150.80        0        0   \n",
+       "8800       30000        60              19.29       783.02        0        0   \n",
+       "22444       4000        36               5.79       121.31        0        0   \n",
+       "...          ...       ...                ...          ...      ...      ...   \n",
+       "29359      10000        36               7.88       238.52        0        0   \n",
+       "19007       8000        36               5.42       241.28        0        0   \n",
+       "14331      24000        60              15.99       583.51        1        0   \n",
+       "32513      25000        36              19.04       916.95        0        0   \n",
+       "17393       4800        36               5.42       144.77        0        0   \n",
+       "\n",
+       "       grade_A  grade_E  grade_C  grade_G  grade_F  annual_inc  \n",
+       "17032        0        0        0        1        0     65000.0  \n",
+       "35328        0        0        1        0        0     50000.0  \n",
+       "16617        1        0        0        0        0     31000.0  \n",
+       "8800         0        1        0        0        0     80000.0  \n",
+       "22444        1        0        0        0        0     33600.0  \n",
+       "...        ...      ...      ...      ...      ...         ...  \n",
+       "29359        1        0        0        0        0     84000.0  \n",
+       "19007        1        0        0        0        0     57000.0  \n",
+       "14331        0        0        0        0        0    100000.0  \n",
+       "32513        0        0        0        0        1     95000.0  \n",
+       "17393        1        0        0        0        0     96900.0  \n",
+       "\n",
+       "[9930 rows x 12 columns]"
+      ]
+     },
+     "execution_count": 132,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_test_cats"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 133,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "15043    0\n",
+       "29531    2\n",
+       "25485    0\n",
+       "13745    0\n",
+       "7169     2\n",
+       "21733    0\n",
+       "18625    2\n",
+       "30833    0\n",
+       "10596    0\n",
+       "14117    0\n",
+       "6178     0\n",
+       "24292    0\n",
+       "36071    0\n",
+       "13927    0\n",
+       "150      0\n",
+       "4549     2\n",
+       "23387    0\n",
+       "3870     0\n",
+       "8519     0\n",
+       "11408    0\n",
+       "Name: status_of_loans, dtype: int64"
+      ]
+     },
+     "execution_count": 133,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "y_train.head(20)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 136,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "logreg = LogisticRegression(C=10_000, multi_class='ovr', solver = 'liblinear', random_state=1234)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 137,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "LogisticRegression(C=10000, class_weight=None, dual=False, fit_intercept=True,\n",
+       "                   intercept_scaling=1, l1_ratio=None, max_iter=100,\n",
+       "                   multi_class='ovr', n_jobs=None, penalty='l2',\n",
+       "                   random_state=1234, solver='liblinear', tol=0.0001, verbose=0,\n",
+       "                   warm_start=False)"
+      ]
+     },
+     "execution_count": 137,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "logreg.fit(X_train_cats, y_train)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 97,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "Int64Index: 29787 entries, 15043 to 27439\n",
+      "Data columns (total 6 columns):\n",
+      " #   Column       Non-Null Count  Dtype  \n",
+      "---  ------       --------------  -----  \n",
+      " 0   loan_amnt    29787 non-null  int64  \n",
+      " 1   term         29787 non-null  object \n",
+      " 2   int_rate     29787 non-null  object \n",
+      " 3   installment  29787 non-null  float64\n",
+      " 4   grade        29787 non-null  object \n",
+      " 5   annual_inc   29787 non-null  float64\n",
+      "dtypes: float64(2), int64(1), object(3)\n",
+      "memory usage: 1.6+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "X_train.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
